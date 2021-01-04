@@ -36,6 +36,8 @@ public class InventoryResource {
   @Inject InventoryManager manager;
   // end::Inject[]
 
+  @Inject InventoryConfig inventoryConfig;
+  
   @GET
   @Path("{hostname}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -56,7 +58,13 @@ public class InventoryResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public InventoryList listContents() {
-    return manager.list();
+  public Response listContents() {
+	if( !inventoryConfig.isInMaintenance() ) {
+		return Response.ok(manager.list()).build();
+	}else {
+		return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+				.entity(String.format("{\"error\":\"Service is currently in maintanance. Contact %s\"}",inventoryConfig.getEmail().toString()))
+				.build();
+	}
   }
 }
